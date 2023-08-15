@@ -1,6 +1,6 @@
 name: Release!
 run-name: ${{ github.actor }} is releasing ${{ github.event.release.tag_name }}
-on: workflow_dispatch
+on: [workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
