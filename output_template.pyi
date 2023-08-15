@@ -1,0 +1,3 @@
+from typing import List, Dict, Any, overload
+
+def scriptapp(app: str) -> Resolve: ...
