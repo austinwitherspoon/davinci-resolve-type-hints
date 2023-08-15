@@ -1,5 +1,5 @@
 name: Release!
-run-name: ${{ github.actor }} is releasing ${{ github.event.release.tag_name }}
+run-name: ${{ github.actor }} is releasing!
 on: [workflow_dispatch]
 jobs:
   build:
