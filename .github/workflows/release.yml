@@ -11,7 +11,7 @@ jobs:
         python-version: "3.10"
     - name: Run generator
       run: |
-        python -m ./generate_resolve_type_hints.py
+        python ./generate_resolve_type_hints.py
     - name: Archive results
       uses: actions/upload-artifact@v3
       with:
