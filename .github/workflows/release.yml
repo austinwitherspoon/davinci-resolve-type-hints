@@ -1,21 +1,23 @@
 name: Build .pyi
-run-name: ${{ github.actor }} started new .pyi build
-on: [push]
+run-name: ${{ github.actor }} is releasing ${{ github.event.release.tag_name }}
+on: workflow_dispatch
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
+    - name: generate .pyi
+      uses: ./.github/workflows/build.yml
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
       with:
-        python-version: "3.10"
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: Run generator
-      run: |
-        python generate_resolve_type_hints.py
-    - name: Archive results
-      uses: actions/upload-artifact@v3
-      with:
-        name: DaVinciResolveScript.pyi
-        path: output/DaVinciResolveScript.pyi
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          Changes in this Release
+          - First Change
+          - Second Change
+        draft: true
+        prerelease: false
