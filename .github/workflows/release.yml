@@ -1,23 +1,30 @@
 name: Release!
-run-name: ${{ github.actor }} is releasing!
+run-name: ${{ github.actor }} started new release
 on: [workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: generate .pyi
-      uses: ./.github/workflows/build.yml
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        body: |
-          Changes in this Release
-          - First Change
-          - Second Change
-        draft: true
+        python-version: "3.10"
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: Run generator
+      run: |
+        python generate_resolve_type_hints.py
+    - name: Archive results
+      uses: actions/upload-artifact@v3
+      with:
+        name: DaVinciResolveScript
+        path: output/DaVinciResolveScript.pyi
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
         prerelease: false
+        title: "Development Build"
+        files: |
+            LICENSE.txt
+            *.jar
