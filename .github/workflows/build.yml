@@ -1,0 +1,21 @@
+name: Build .pyi
+run-name: ${{ github.actor }} started new .pyi build
+on: [push, workflow_call]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: checkout
+      uses: actions/checkout@v3
+    - name: Run generator
+      run: |
+        python generate_resolve_type_hints.py
+    - name: Archive results
+      uses: actions/upload-artifact@v3
+      with:
+        name: DaVinciResolveScript
+        path: output/DaVinciResolveScript.pyi
