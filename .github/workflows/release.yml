@@ -1,5 +1,5 @@
 name: Build .pyi
-run-name: ${{ github.actor }} is building a new .pyi file
+run-name: ${{ github.actor }} started new .pyi build
 on: [push]
 jobs:
   build:
@@ -17,5 +17,5 @@ jobs:
     - name: Archive results
       uses: actions/upload-artifact@v3
       with:
-        name: pyi
+        name: DaVinciResolveScript.pyi
         path: output/DaVinciResolveScript.pyi
