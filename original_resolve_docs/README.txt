@@ -1,32 +1,29 @@
-Updated as of 26 May 2023
+Last Updated: 1 April 2024
 ----------------------------
 In this package, you will find a brief introduction to the Scripting API for DaVinci Resolve Studio. Apart from this README.txt file, this package contains folders containing the basic import
 modules for scripting access (DaVinciResolve.py) and some representative examples.
 
 From v16.2.0 onwards, the nodeIndex parameters accepted by SetLUT() and SetCDL() are 1-based instead of 0-based, i.e. 1 <= nodeIndex <= total number of nodes.
 
-
 Overview
 --------
-As with Blackmagic Design Fusion scripts, user scripts written in Lua and Python programming languages are supported. By default, scripts can be invoked from the Console window in the Fusion page,
+As with Blackmagic Fusion scripts, user scripts written in Lua and Python programming languages are supported. By default, scripts can be invoked from the Console window in the Fusion page,
 or via command line. This permission can be changed in Resolve Preferences, to be only from Console, or to be invoked from the local network. Please be aware of the security implications when
 allowing scripting access from outside of the Resolve application.
-
 
 Prerequisites
 -------------
 DaVinci Resolve scripting requires one of the following to be installed (for all users):
 
     Lua 5.1
-    Python 2.7 64-bit
     Python >= 3.6 64-bit
-
+    Python 2.7 64-bit
 
 Using a script
 --------------
 DaVinci Resolve needs to be running for a script to be invoked.
 
-For a Resolve script to be executed from an external folder, the script needs to know of the API location. 
+For a Resolve script to be executed from an external folder, the script needs to know of the API location.
 You may need to set the these environment variables to allow for your Python installation to pick up the appropriate dependencies as shown below:
 
     Mac OS X:
@@ -47,9 +44,9 @@ You may need to set the these environment variables to allow for your Python ins
 
 As with Fusion scripts, Resolve scripts can also be invoked via the menu and the Console.
 
-On startup, DaVinci Resolve scans the subfolders in the directories shown below and enumerates the scripts found in the Workspace application menu under Scripts. 
+On startup, DaVinci Resolve scans the subfolders in the directories shown below and enumerates the scripts found in the Workspace application menu under Scripts.
 Place your script under Utility to be listed in all pages, under Comp or Tool to be available in the Fusion page or under folders for individual pages (Edit, Color or Deliver). Scripts under Deliver are additionally listed under render jobs.
-Placing your script here and invoking it from the menu is the easiest way to use scripts. 
+Placing your script here and invoking it from the menu is the easiest way to use scripts.
     Mac OS X:
       - All users: /Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts
       - Specific user:  /Users/<UserName>/Library/Application Support/Blackmagic Design/DaVinci Resolve/Fusion/Scripts
@@ -64,6 +61,7 @@ The interactive Console window allows for an easy way to execute simple scriptin
 and Lua and evaluates and executes them immediately. For more information on how to use the Console, please refer to the DaVinci Resolve User Manual.
 
 This example Python script creates a simple project:
+
     #!/usr/bin/env python
     import DaVinciResolveScript as dvr_script
     resolve = dvr_script.scriptapp("Resolve")
@@ -80,9 +78,8 @@ Running DaVinci Resolve in headless mode
 DaVinci Resolve can be launched in a headless mode without the user interface using the -nogui command line option. When DaVinci Resolve is launched using this option, the user interface is disabled.
 However, the various scripting APIs will continue to work as expected.
 
-
-Basic Resolve API
------------------
+DaVinci Resolve API
+-------------------
 Some commonly used API functions are described below (*). As with the resolve object, each object is inspectable for properties and functions.
 
 Resolve
@@ -101,6 +98,12 @@ Resolve
   SaveLayoutPreset(presetName)                    --> Bool               # Saves current UI layout as a preset named 'presetName'.
   ImportLayoutPreset(presetFilePath, presetName)  --> Bool               # Imports preset from path 'presetFilePath'. The optional argument 'presetName' specifies how the preset shall be named. If not specified, the preset is named based on the filename.
   Quit()                                          --> None               # Quits the Resolve App.
+  ImportRenderPreset(presetPath)                  --> Bool               # Import a preset from presetPath (string) and set it as current preset for rendering.
+  ExportRenderPreset(presetName, exportPath)      --> Bool               # Export a preset to a given path (string) if presetName(string) exists.
+  ImportBurnInPreset(presetPath)                  --> Bool               # Import a data burn in preset from a given presetPath (string)
+  ExportBurnInPreset(presetName, exportPath)      --> Bool               # Export a data burn in preset to a given path (string) if presetName (string) exists.
+  GetKeyframeMode()                               --> keyframeMode       # Returns the currently set keyframe mode (int). Refer to section 'Keyframe Mode information' below for details.
+  SetKeyframeMode(keyframeMode)                   --> Bool               # Returns True when 'keyframeMode'(enum) is successfully set. Refer to section 'Keyframe Mode information' below for details.
 
 ProjectManager
   ArchiveProject(projectName,
@@ -131,6 +134,14 @@ ProjectManager
                                                                          # 'DbType': 'Disk' or 'PostgreSQL' (string)
                                                                          # 'DbName': database name (string)
                                                                          # 'IpAddress': IP address of the PostgreSQL server (string, optional key - defaults to '127.0.0.1')
+  CreateCloudProject({cloudSettings})             --> Project            # Creates and returns a cloud project.
+                                                                         # '{cloudSettings}': Check 'Cloud Projects Settings' subsection below for more information.
+  ImportCloudProject(filePath, {cloudSettings})   --> Bool               # Returns True if import cloud project is successful; False otherwise
+                                                                         # 'filePath': String; filePath of file to import
+                                                                         # '{cloudSettings}': Check 'Cloud Projects Settings' subsection below for more information.
+  RestoreCloudProject(folderPath, {cloudSettings}) --> Bool              # Returns True if restore cloud project is successful; False otherwise
+                                                                         # 'folderPath': String; path of folder to restore
+                                                                         # '{cloudSettings}': Check 'Cloud Projects Settings' subsection below for more information.
 
 Project
   GetMediaPool()                                  --> MediaPool          # Returns the Media Pool object.
@@ -151,7 +162,7 @@ Project
   StartRendering(jobId1, jobId2, ...)             --> Bool               # Starts rendering jobs indicated by the input job ids.
   StartRendering([jobIds...], isInteractiveMode=False)    --> Bool       # Starts rendering jobs indicated by the input job ids.
                                                                          # The optional "isInteractiveMode", when set, enables error feedback in the UI during rendering.
-  StartRendering(isInteractiveMode=False)                 --> Bool       # Starts rendering all queued render jobs. 
+  StartRendering(isInteractiveMode=False)                 --> Bool       # Starts rendering all queued render jobs.
                                                                          # The optional "isInteractiveMode", when set, enables error feedback in the UI during rendering.
   StopRendering()                                 --> None               # Stops any current render processes.
   IsRenderingInProgress()                         --> Bool               # Returns True if rendering is in progress.
@@ -175,6 +186,9 @@ Project
           startOffsetInSamples, durationInSamples)
   LoadBurnInPreset(presetName)                    --> Bool               # Loads user defined data burn in preset for project when supplied presetName (string). Returns true if successful.
   ExportCurrentFrameAsStill(filePath)             --> Bool               # Exports current frame as still to supplied filePath. filePath must end in valid export file format. Returns True if succssful, False otherwise.
+  GetColorGroupsList()                            --> [ColorGroups...]   # Returns a list of all group objects in the timeline.
+  AddColorGroup(groupName)                        --> ColorGroup         # Creates a new ColorGroup. groupName must be a unique string.
+  DeleteColorGroup(colorGroup)                    --> Bool               # Deletes the given color group and sets clips to ungrouped.
 
 MediaStorage
   GetMountedVolumeList()                          --> [paths...]         # Returns list of folder paths corresponding to mounted volumes displayed in Resolve’s Media Storage.
@@ -198,7 +212,7 @@ MediaPool
   CreateTimelineFromClips(name, clip1, clip2,...) --> Timeline           # Creates new timeline with specified name, and appends the specified MediaPoolItem objects.
   CreateTimelineFromClips(name, [clips])          --> Timeline           # Creates new timeline with specified name, and appends the specified MediaPoolItem objects.
   CreateTimelineFromClips(name, [{clipInfo}])     --> Timeline           # Creates new timeline with specified name, appending the list of clipInfos specified as a dict of "mediaPoolItem", "startFrame" (int), "endFrame" (int), "recordFrame" (int).
-  ImportTimelineFromFile(filePath, {importOptions}) --> Timeline         # Creates timeline based on parameters within given file (AAF/EDL/XML/FCPXML/DRT/ADL) and optional importOptions dict, with support for the keys:
+  ImportTimelineFromFile(filePath, {importOptions}) --> Timeline         # Creates timeline based on parameters within given file (AAF/EDL/XML/FCPXML/DRT/ADL/OTIO) and optional importOptions dict, with support for the keys:
                                                                          # "timelineName": string, specifies the name of the timeline to be created. Not valid for DRT import
                                                                          # "importSourceClips": Bool, specifies whether source clips should be imported, True by default. Not valid for DRT import
                                                                          # "sourceClipsPath": string, specifies a filesystem path to search for source clips if the media is inaccessible in their original path and if "importSourceClips" is True
@@ -225,6 +239,8 @@ MediaPool
   ExportMetadata(fileName, [clips])               --> Bool               # Exports metadata of specified clips to 'fileName' in CSV format.
                                                                          # If no clips are specified, all clips from media pool will be used.
   GetUniqueId()                                   --> string             # Returns a unique ID for the media pool
+  CreateStereoClip(LeftMediaPoolItem,
+                   RightMediaPoolItem)            --> MediaPoolItem      # Takes in two existing media pool items and creates a new 3D stereoscopic media pool entry replacing the input media in the media pool.
 
 Folder
   GetClipList()                                   --> [clips...]         # Returns a list of clips (items) within the folder.
@@ -233,6 +249,8 @@ Folder
   GetIsFolderStale()                              --> bool               # Returns true if folder is stale in collaboration mode, false otherwise
   GetUniqueId()                                   --> string             # Returns a unique ID for the media pool folder
   Export(filePath)                                --> bool               # Returns true if export of DRB folder to filePath is successful, false otherwise
+  TranscribeAudio()                               --> Bool               # Transcribes audio of the MediaPoolItems within the folder and nested folders. Returns True if successful; False otherwise
+  ClearTranscription()                            --> Bool               # Clears audio transcription of the MediaPoolItems within the folder and nested folders. Returns True if successful; False otherwise.
 
 MediaPoolItem
   GetName()                                       --> string             # Returns the clip name.
@@ -258,7 +276,7 @@ MediaPoolItem
   GetClipColor()                                  --> string             # Returns the item color as a string.
   SetClipColor(colorName)                         --> Bool               # Sets the item color based on the colorName (string).
   ClearClipColor()                                --> Bool               # Clears the item color.
-  GetClipProperty(propertyName=None)              --> string|dict        # Returns the property value for the key 'propertyName'. 
+  GetClipProperty(propertyName=None)              --> string|dict        # Returns the property value for the key 'propertyName'.
                                                                          # If no argument is specified, a dict of all clip properties is returned. Check the section below for more information.
   SetClipProperty(propertyName, propertyValue)    --> Bool               # Sets the given property to propertyValue (string). Check the section below for more information.
   LinkProxyMedia(proxyMediaFilePath)              --> Bool               # Links proxy media located at path specified by arg 'proxyMediaFilePath' with the current clip. 'proxyMediaFilePath' should be absolute clip path.
@@ -340,8 +358,12 @@ Timeline
   GrabStill()                                     --> galleryStill       # Grabs still from the current video clip. Returns a GalleryStill object.
   GrabAllStills(stillFrameSource)                 --> [galleryStill]     # Grabs stills from all the clips of the timeline at 'stillFrameSource' (1 - First frame, 2 - Middle frame). Returns the list of GalleryStill objects.
   GetUniqueId()                                   --> string             # Returns a unique ID for the timeline
-  CreateSubtitlesFromAudio()                      --> Bool               # Creates subtitles from audio for the timeline. Returns True on success, False otherwise.
+  CreateSubtitlesFromAudio({autoCaptionSettings}) --> Bool               # Creates subtitles from audio for the timeline.
+                                                                         # Takes in optional dictionary {autoCaptionSettings}. Check 'Auto Caption Settings' subsection below for more information.
+                                                                         # Returns True on success, False otherwise.
   DetectSceneCuts()                               --> Bool               # Detects and makes scene cuts along the timeline. Returns True if successful, False otherwise.
+  ConvertTimelineToStereo()                       --> Bool               # Converts timeline to stereo. Returns True if successful; False otherwise.
+  GetNodeGraph()                                  --> Graph              # Returns the timeline's node graph object.
 
 TimelineItem
   GetName()                                       --> string             # Returns the item name.
@@ -370,7 +392,7 @@ TimelineItem
   DeleteMarkerByCustomData(customData)            --> Bool               # Delete first matching marker with specified customData.
   AddFlag(color)                                  --> Bool               # Adds a flag with given color (string).
   GetFlagList()                                   --> [colors...]        # Returns a list of flag colors assigned to the item.
-  ClearFlags(color)                               --> Bool               # Clear flags of the specified color. An "All" argument is supported to clear all flags. 
+  ClearFlags(color)                               --> Bool               # Clear flags of the specified color. An "All" argument is supported to clear all flags.
   GetClipColor()                                  --> string             # Returns the item color as a string.
   SetClipColor(colorName)                         --> Bool               # Sets the item color based on the colorName (string).
   ClearClipColor()                                --> Bool               # Clears the item color.
@@ -390,12 +412,7 @@ TimelineItem
   GetStereoConvergenceValues()                    --> {keyframes...}     # Returns a dict (offset -> value) of keyframe offsets and respective convergence values.
   GetStereoLeftFloatingWindowParams()             --> {keyframes...}     # For the LEFT eye -> returns a dict (offset -> dict) of keyframe offsets and respective floating window params. Value at particular offset includes the left, right, top and bottom floating window values.
   GetStereoRightFloatingWindowParams()            --> {keyframes...}     # For the RIGHT eye -> returns a dict (offset -> dict) of keyframe offsets and respective floating window params. Value at particular offset includes the left, right, top and bottom floating window values.
-  GetNumNodes()                                   --> int                # Returns the number of nodes in the current graph for the timeline item
   ApplyArriCdlLut()                               --> Bool               # Applies ARRI CDL and LUT. Returns True if successful, False otherwise.
-  SetLUT(nodeIndex, lutPath)                      --> Bool               # Sets LUT on the node mapping the node index provided, 1 <= nodeIndex <= total number of nodes.
-                                                                         # The lutPath can be an absolute path, or a relative path (based off custom LUT paths or the master LUT path).
-                                                                         # The operation is successful for valid lut paths that Resolve has already discovered (see Project.RefreshLUTList).
-  GetLUT(nodeIndex)                               --> String             # Gets relative LUT path based on the node index provided, 1 <= nodeIndex <= total number of nodes.
   SetCDL([CDL map])                               --> Bool               # Keys of map are: "NodeIndex", "Slope", "Offset", "Power", "Saturation", where 1 <= NodeIndex <= total number of nodes.
                                                                          # Example python code - SetCDL({"NodeIndex" : "1", "Slope" : "0.5 0.4 0.2", "Offset" : "0.4 0.3 0.2", "Power" : "0.6 0.7 0.8", "Saturation" : "0.65"})
   AddTake(mediaPoolItem, startFrame, endFrame)    --> Bool               # Adds mediaPoolItem as a new take. Initializes a take selector for the timeline item if needed. By default, the full clip extents is added. startFrame (int) and endFrame (int) are optional arguments used to specify the extents.
@@ -411,11 +428,17 @@ TimelineItem
   UpdateSidecar()                                 --> Bool               # Updates sidecar file for BRAW clips or RMD file for R3D clips.
   GetUniqueId()                                   --> string             # Returns a unique ID for the timeline item
   LoadBurnInPreset(presetName)                    --> Bool               # Loads user defined data burn in preset for clip when supplied presetName (string). Returns true if successful.
-  GetNodeLabel(nodeIndex)                         --> string             # Returns the label of the node at nodeIndex.
   CreateMagicMask(mode)                           --> Bool               # Returns True if magic mask was created successfully, False otherwise. mode can "F" (forward), "B" (backward), or "BI" (bidirection)
   RegenerateMagicMask()                           --> Bool               # Returns True if magic mask was regenerated successfully, False otherwise.
   Stabilize()                                     --> Bool               # Returns True if stabilization was successful, False otherwise
   SmartReframe()                                  --> Bool               # Performs Smart Reframe. Returns True if successful, False otherwise.
+  GetNodeGraph()                                  --> Graph              # Returns the clip's node graph object.
+  GetColorGroup()                                 --> ColorGroup         # Returns the clip's color group if one exists.
+  AssignToColorGroup(ColorGroup)                  --> Bool               # Returns True if TiItem to successfully assigned to given ColorGroup. ColorGroup must be an existing group in the current project.
+  RemoveFromColorGroup()                          --> Bool               # Returns True if the TiItem is successfully removed from the ColorGroup it is in.
+  ExportLUT(exportType, path)                     --> Bool               # Exports LUTs from tiItem referring to value passed in 'exportType' (enum) for LUT size. Refer to. 'ExportLUT notes' section for possible values.
+                                                                         # Saves generated LUT in the provided 'path' (string). 'path' should include the intended file name.
+                                                                         # If an empty or incorrect extension is provided, the appropriate extension (.cube/.vlt) will be appended at the end of the path.
 
 Gallery
   GetAlbumName(galleryStillAlbum)                 --> string             # Returns the name of the GalleryStillAlbum object 'galleryStillAlbum'.
@@ -428,10 +451,27 @@ GalleryStillAlbum
   GetStills()                                     --> [galleryStill]     # Returns the list of GalleryStill objects in the album.
   GetLabel(galleryStill)                          --> string             # Returns the label of the galleryStill.
   SetLabel(galleryStill, label)                   --> Bool               # Sets the new 'label' to GalleryStill object 'galleryStill'.
-  ExportStills([galleryStill], folderPath, filePrefix, format) --> Bool  # Exports list of GalleryStill objects '[galleryStill]' to directory 'folderPath', with filename prefix 'filePrefix', using file format 'format' (supported formats: dpx, cin, tif, jpg, png, ppm, bmp, xpm).
+  ImportStills([filePaths])                       --> Bool               # Imports GalleryStill from each filePath in [filePaths] list. True if at least one still is imported successfully. False otherwise.
+  ExportStills([galleryStill], folderPath, filePrefix, format) --> Bool  # Exports list of GalleryStill objects '[galleryStill]' to directory 'folderPath', with filename prefix 'filePrefix', using file format 'format' (supported formats: dpx, cin, tif, jpg, png, ppm, bmp, xpm, drx).
   DeleteStills([galleryStill])                    --> Bool               # Deletes specified list of GalleryStill objects '[galleryStill]'.
 
 GalleryStill                                                             # This class does not provide any API functions but the object type is used by functions in other classes.
+
+Graph
+  GetNumNodes()                                   --> int                # Returns the number of nodes in the graph
+  SetLUT(nodeIndex, lutPath)                      --> Bool               # Sets LUT on the node mapping the node index provided, 1 <= nodeIndex <= self.GetNumNodes().
+                                                                         # The lutPath can be an absolute path, or a relative path (based off custom LUT paths or the master LUT path).
+                                                                         # The operation is successful for valid lut paths that Resolve has already discovered (see Project.RefreshLUTList).
+  GetLUT(nodeIndex)                               --> String             # Gets relative LUT path based on the node index provided, 1 <= nodeIndex <= total number of nodes.
+  GetNodeLabel(nodeIndex)                         --> string             # Returns the label of the node at nodeIndex.
+  GetToolsInNode(nodeIndex)                       --> [toolsList]        # Returns toolsList (list of strings) of the tools used in the node indicated by given nodeIndex (int).
+
+ColorGroup
+  GetName()                                       --> String             # Returns the name (string) of the ColorGroup.
+  SetName(groupName)                              --> Bool               # Renames ColorGroup to groupName (string).
+  GetClipsInTimeline(Timeline=CurrTimeline)       --> [TimelineItem]     # Returns a list of TimelineItem that are in colorGroup in the given Timeline. Timeline is Current Timeline by default.
+  GetPreClipNodeGraph()                           --> Graph              # Returns the ColorGroup Pre-clip graph.
+  GetPostClipNodeGraph()                          --> Graph              # Returns the ColorGroup Post-clip graph.
 
 List and Dict Data Structures
 -----------------------------
@@ -439,9 +479,38 @@ Beside primitive data types, Resolve's Python API mainly uses list and dict data
 As Lua does not support list and dict data structures, the Lua API implements "list" as a table with indices, e.g. { [1] = listValue1, [2] = listValue2, ... }.
 Similarly the Lua API implements "dict" as a table with the dictionary key as first element, e.g. { [dictKey1] = dictValue1, [dictKey2] = dictValue2, ... }.
 
+Keyframe Mode information
+-------------------------
+This section covers additional notes for the functions Resolve.GetKeyframeMode() and Resolve.SetKeyframeMode(keyframeMode).
+
+'keyframeMode' can be one of the following enums:
+    - resolve.KEYFRAME_MODE_ALL     == 0
+    - resolve.KEYFRAME_MODE_COLOR   == 1
+    - resolve.KEYFRAME_MODE_SIZING  == 2
+
+Integer values returned by Resolve.GetKeyframeMode() will correspond to the enums above.
+
+Cloud Projects Settings
+--------------------------------------
+This section covers additional notes for the functions "ProjectManager:CreateCloudProject," "ProjectManager:ImportCloudProject," and "ProjectManager:RestoreCloudProject"
+
+All three functions take in a {cloudSettings} dict, that have the following keys:
+* resolve.CLOUD_SETTING_PROJECT_NAME: String, ["" by default]
+* resolve.CLOUD_SETTING_PROJECT_MEDIA_PATH: String, ["" by default]
+* resolve.CLOUD_SETTING_IS_COLLAB: Bool, [False by default]
+* resolve.CLOUD_SETTING_SYNC_MODE: syncMode (see below), [resolve.CLOUD_SYNC_PROXY_ONLY by default]
+* resolve.CLOUD_SETTING_IS_CAMERA_ACCESS: Bool [False by default]
+
+Where syncMode is one of the following values:
+* resolve.CLOUD_SYNC_NONE,
+* resolve.CLOUD_SYNC_PROXY_ONLY,
+* resolve.CLOUD_SYNC_PROXY_AND_ORIG
+
+All three "ProjectManager:CreateCloudProject," "ProjectManager:ImportCloudProject," and "ProjectManager:RestoreCloudProject" require resolve.PROJECT_MEDIA_PATH to be defined. "ProjectManager:CreateCloudProject" also requires resolve.PROJECT_NAME to be defined.
+
 Looking up Project and Clip properties
 --------------------------------------
-This section covers additional notes for the functions "Project:GetSetting", "Project:SetSetting", "Timeline:GetSetting", "Timeline:SetSetting", "MediaPoolItem:GetClipProperty" and 
+This section covers additional notes for the functions "Project:GetSetting", "Project:SetSetting", "Timeline:GetSetting", "Timeline:SetSetting", "MediaPoolItem:GetClipProperty" and
 "MediaPoolItem:SetClipProperty". These functions are used to get and set properties otherwise available to the user through the Project Settings and the Clip Attributes dialogs.
 
 The functions follow a key-value pair format, where each property is identified by a key (the settingName or propertyName parameter) and possesses a value (typically a text value). Keys and values are
@@ -450,13 +519,13 @@ designed to be easily correlated with parameter names and values in the Resolve 
 Some properties may be read only - these include intrinsic clip properties like date created or sample rate, and properties that can be disabled in specific application contexts (e.g. custom colorspaces
 in an ACES workflow, or output sizing parameters when behavior is set to match timeline)
 
-Getting values: 
-Invoke "Project:GetSetting", "Timeline:GetSetting" or "MediaPoolItem:GetClipProperty" with the appropriate property key. To get a snapshot of all queryable properties (keys and values), you can call 
-"Project:GetSetting", "Timeline:GetSetting" or "MediaPoolItem:GetClipProperty" without parameters (or with a NoneType or a blank property key). Using specific keys to query individual properties will 
+Getting values:
+Invoke "Project:GetSetting", "Timeline:GetSetting" or "MediaPoolItem:GetClipProperty" with the appropriate property key. To get a snapshot of all queryable properties (keys and values), you can call
+"Project:GetSetting", "Timeline:GetSetting" or "MediaPoolItem:GetClipProperty" without parameters (or with a NoneType or a blank property key). Using specific keys to query individual properties will
 be faster. Note that getting a property using an invalid key will return a trivial result.
 
-Setting values: 
-Invoke "Project:SetSetting", "Timeline:SetSetting" or "MediaPoolItem:SetClipProperty" with the appropriate property key and a valid value. When setting a parameter, please check the return value to 
+Setting values:
+Invoke "Project:SetSetting", "Timeline:SetSetting" or "MediaPoolItem:SetClipProperty" with the appropriate property key and a valid value. When setting a parameter, please check the return value to
 ensure the success of the operation. You can troubleshoot the validity of keys and values by setting the desired result from the UI and checking property snapshots before and after the change.
 
 The following Project properties have specifically enumerated values:
@@ -466,7 +535,7 @@ Affects:
 • x = Project:GetSetting('superScale') and Project:SetSetting('superScale', x)
 • for '2x Enhanced' --> Project:SetSetting('superScale', 2, sharpnessValue, noiseReductionValue), where sharpnessValue is a float in the range [0.0, 1.0] and noiseReductionValue is a float in the range [0.0, 1.0]
 
-"timelineFrameRate" - the property value is one of the frame rates available to the user in project settings under "Timeline frame rate" option. Drop Frame can be configured for supported frame rates 
+"timelineFrameRate" - the property value is one of the frame rates available to the user in project settings under "Timeline frame rate" option. Drop Frame can be configured for supported frame rates
                       by appending the frame rate with "DF", e.g. "29.97 DF" will enable drop frame and "29.97" will disable drop frame
 Affects:
 • x = Project:GetSetting('timelineFrameRate') and Project:SetSetting('timelineFrameRate', x)
@@ -478,6 +547,49 @@ Affects:
 • x = MediaPoolItem:GetClipProperty('Super Scale') and MediaPoolItem:SetClipProperty('Super Scale', x)
 • for '2x Enhanced' --> MediaPoolItem:SetClipProperty('Super Scale', 2, sharpnessValue, noiseReductionValue), where sharpnessValue is a float in the range [0.0, 1.0] and noiseReductionValue is a float in the range [0.0, 1.0]
 
+Auto Caption Settings
+----------------------
+This section covers the supported settings for the method Timeline.CreateSubtitlesFromAudio({autoCaptionSettings})
+
+The parameter setting is a dictionary containing the following keys:
+* resolve.SUBTITLE_LANGUAGE: languageID (see below), [resolve.AUTO_CAPTION_AUTO by default]
+* resolve.SUBTITLE_CAPTION_PRESET: presetType (see below), [resolve.AUTO_CAPTION_SUBTITLE_DEFAULT by default]
+* resolve.SUBTITLE_CHARS_PER_LINE: Number between 1 and 60 inclusive [42 by default]
+* resolve.SUBTITLE_LINE_BREAK: lineBreakType (see below), [resolve.AUTO_CAPTION_LINE_SINGLE by default]
+* resolve.SUBTITLE_GAP: Number between 0 and 10 inclusive [0 by default]
+
+Note that the default values for some keys may change based on values defined for other keys, as per the UI.
+For example, if the following dictionary is supplied,
+    CreateSubtitlesFromAudio( { resolve.SUBTITLE_LANGUAGE = resolve.AUTO_CAPTION_KOREAN,
+                                resolve.SUBTITLE_CAPTION_PRESET = resolve.AUTO_CAPTION_NETFLIX } )
+the default value for resolve.SUBTITLE_CHARS_PER_LINE will be 16 instead of 42
+
+languageIDs:
+* resolve.AUTO_CAPTION_AUTO
+* resolve.AUTO_CAPTION_DANISH
+* resolve.AUTO_CAPTION_DUTCH
+* resolve.AUTO_CAPTION_ENGLISH
+* resolve.AUTO_CAPTION_FRENCH
+* resolve.AUTO_CAPTION_GERMAN
+* resolve.AUTO_CAPTION_ITALIAN
+* resolve.AUTO_CAPTION_JAPANESE
+* resolve.AUTO_CAPTION_KOREAN
+* resolve.AUTO_CAPTION_MANDARIN_SIMPLIFIED
+* resolve.AUTO_CAPTION_MANDARIN_TRADITIONAL
+* resolve.AUTO_CAPTION_NORWEGIAN
+* resolve.AUTO_CAPTION_PORTUGUESE
+* resolve.AUTO_CAPTION_RUSSIAN
+* resolve.AUTO_CAPTION_SPANISH
+* resolve.AUTO_CAPTION_SWEDISH
+
+presetTypes:
+* resolve.AUTO_CAPTION_SUBTITLE_DEFAULT
+* resolve.AUTO_CAPTION_TELETEXT
+* resolve.AUTO_CAPTION_NETFLIX
+
+lineBreakTypes:
+* resolve.AUTO_CAPTION_LINE_SINGLE
+* resolve.AUTO_CAPTION_LINE_DOUBLE
 
 Looking up Render Settings
 --------------------------
@@ -531,6 +643,8 @@ exportType can be one of the following constants:
     - resolve.EXPORT_DOLBY_VISION_VER_4_0
     - resolve.EXPORT_DOLBY_VISION_VER_5_1
     - resolve.EXPORT_OTIO
+    - resolve.EXPORT_ALE
+    - resolve.EXPORT_ALE_CDL
 exportSubtype can be one of the following enums:
     - resolve.EXPORT_NONE
     - resolve.EXPORT_AAF_NEW
@@ -627,7 +741,8 @@ The supported keys with their accepted values are:
      - MOTION_EST_STANDARD_BETTER
      - MOTION_EST_ENHANCED_FASTER
      - MOTION_EST_ENHANCED_BETTER
-     - MOTION_EST_SPEED_WRAP
+     - MOTION_EST_SPEED_WARP_BETTER
+     - MOTION_EST_SPEED_WARP_FASTER
   "Scaling" : A value from the following constants
      - SCALE_USE_PROJECT = 0
      - SCALE_CROP
@@ -658,6 +773,16 @@ The arguments can be passed as a key and value pair or they can be grouped toget
 as a single argument.
 
 Getting the values for the keys that uses constants will return the number which is in the constant
+
+ExportLUT notes
+---------------
+The following section covers additional notes for TimelineItem.ExportLUT(exportType, path).
+
+Supported values for 'exportType' (enum) are:
+    - resolve.EXPORT_LUT_17PTCUBE
+    - resolve.EXPORT_LUT_33PTCUBE
+    - resolve.EXPORT_LUT_65PTCUBE
+    - resolve.EXPORT_LUT_PANASONICVLUT
 
 Deprecated Resolve API Functions
 --------------------------------
@@ -693,7 +818,12 @@ TimelineItem
   GetFusionCompNames()                            --> {names...}         # Returns a dict of Fusion composition names associated with the timeline item.
   GetFlags()                                      --> {colors...}        # Returns a dict of flag colors assigned to the item.
   GetVersionNames(versionType)                    --> {names...}         # Returns a dict of version names by provided versionType: 0 - local, 1 - remote.
-
+  GetNumNodes()                                   --> int                # Returns the number of nodes in the current graph for the timeline item
+  SetLUT(nodeIndex, lutPath)                      --> Bool               # Sets LUT on the node mapping the node index provided, 1 <= nodeIndex <= total number of nodes.
+                                                                         # The lutPath can be an absolute path, or a relative path (based off custom LUT paths or the master LUT path).
+                                                                         # The operation is successful for valid lut paths that Resolve has already discovered (see Project.RefreshLUTList).
+  GetLUT(nodeIndex)                               --> String             # Gets relative LUT path based on the node index provided, 1 <= nodeIndex <= total number of nodes.
+  GetNodeLabel(nodeIndex)                         --> string             # Returns the label of the node at nodeIndex.
 
 Unsupported Resolve API Functions
 ---------------------------------

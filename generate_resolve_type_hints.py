@@ -21,6 +21,7 @@ ARG_OVERRIDES = {
     "Project: list": "Project: List[Project]",
     "idx: Any": "idx: int",
     "color: Any": "color: str",
+    "...]": "",
 }
 
 CLASS_NAMES = set()
@@ -61,7 +62,7 @@ class Function:
                     "Any",
                 )
                 args_output.append(
-                    f"{re.sub(r'[^A-Za-z]', '', arg)}: dict[{matching_type}]"
+                    f"{re.sub(r'[^A-Za-z]', '', arg)}: dict[str, {matching_type}]"
                 )
                 continue
             if arg.lower().endswith("name") or arg.lower().endswith("path"):
@@ -149,10 +150,8 @@ def generate_resolve_type_hints(readme_file: Path) -> str:
         for func in functions:
             # check for duplicate functions
             if func.name in [f.name for f in functions if f != func]:
-                output += f"\t@overload\n"
-            output += (
-                f"\tdef {func.name}({func.processed_args}) -> {func.return_type}:\n"
-            )
+                output += "\t@overload\n"
+            output += f"\tdef {func.name}(self, {func.processed_args}) -> {func.return_type}:\n"
             output += f'\t\t"""{func.description}"""\n'
             output += "\t\t...\n"
         output += "\n"
